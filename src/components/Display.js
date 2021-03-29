@@ -2,7 +2,8 @@ import './Display.css';
 import React from 'react';
 import * as THREE from "three";
 import DragControls from "three-dragcontrols";
-
+import {SpawnObj, UnSpawnObj} from './Function';
+import {SpawnStick, HouseSpawn, UpdateStickMovement} from './StickController';
 
 const Display = (props) => {
 
@@ -20,47 +21,51 @@ const Display = (props) => {
     scene.add(camera);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
 
-    //Grab info from file
-    // if (props.file){
-    //
-      const circle = new THREE.CircleGeometry(50, 10);
-      const mat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-      const sphere = new THREE.Mesh(circle, mat);
-      sphere.position.set(1000, 264, 0);
-      scene.add(sphere);
-    //
-    // } else {
+    const stickObjects = [];
+    const sceneOjects = [];
+    const dragObjects = [];
 
-      const box = new THREE.BoxGeometry(100, 100, 0);
-      const boxMat = new THREE.MeshBasicMaterial({ color: 0xff00ff });
-      const cube = new THREE.Mesh(box, boxMat);
-      cube.position.set(838, 264, 0);
-      scene.add(cube);
-    // }
+    //Load in local json (TODO: load json from server)
+    let jsonObj = require('../data.json');
+    // console.log(jsonObj);
 
-    //TODO: rename object array
-    const objects = [];
-    objects.push(cube);
-    objects.push(sphere);
+    Object.keys(jsonObj.Game.SelectionMenu).forEach((key) => {
+      SpawnObj(key, jsonObj, scene, dragObjects);
+    });
 
-    const dragControls = new DragControls( objects, camera, renderer.domElement);
+    const dragControls = new DragControls( dragObjects, camera, renderer.domElement);
     dragControls.addEventListener( 'dragstart', (event) => {
-
-      //Create new box and attach to scene
       if (event.object.position.x > width * screenDivider){
-        let newMesh = new THREE.Mesh(box, boxMat);
-        newMesh.position.set(event.object.position.x, event.object.position.y, 0);
-        scene.add(newMesh);
-        objects.push(newMesh);
+        let key = Object.keys(jsonObj.Game.SelectionMenu).find(key => key === event.object.name);
+        SpawnObj(key, jsonObj, scene, dragObjects);
       }
     });
 
     dragControls.addEventListener( 'dragend', (event) => {
       if (event.object.position.x > width * screenDivider){
-          event.object.geometry.dispose();
-          event.object.material.dispose();
-          scene.remove(event.object);
-          console.log(scene);
+        UnSpawnObj(event.object, scene, sceneOjects, dragObjects, jsonObj.Game.Board);
+
+      } else {
+        if (sceneOjects.indexOf(event.object) === -1) {
+          sceneOjects.push(event.object);
+          if (event.object.name === "house"){
+            jsonObj.Game.Board.push({
+              "Name": event.object.name,
+              "X": event.object.position.x,
+              "Y": event.object.position.y,
+              "StickSpawn": false
+            });
+          } else {
+            jsonObj.Game.Board.push({
+              "Name": event.object.name,
+              "X": event.object.position.x,
+              "Y": event.object.position.y
+            });
+          }
+
+          console.log(jsonObj.Game.Board);
+          console.log(sceneOjects);
+        }
       }
     });
 
@@ -73,6 +78,17 @@ const Display = (props) => {
     dividingLineGeometry.vertices.push(new THREE.Vector3(width * screenDivider, -height, 0));
     const line = new THREE.Line(dividingLineGeometry, dividingLineMaterial);
     scene.add(line);
+
+    //TEMP
+    let helperLineMaterial = new THREE.LineBasicMaterial({color: 0x000000, linewidth: 100}); //TODO get linewidth to work
+    let helperLineGeometry = new THREE.Geometry();
+    helperLineGeometry.vertices.push(new THREE.Vector3(-width, 0, 0));
+    helperLineGeometry.vertices.push(new THREE.Vector3(width * screenDivider, 0, 0));
+    let helperLine = new THREE.Line(helperLineGeometry, helperLineMaterial);
+    scene.add(helperLine);
+
+    let pos = {x: -1000, y: 0};
+    stickObjects.push(SpawnStick(scene, pos));
 
     renderer.setClearColor('#808080');
     renderer.setSize(width, height);
@@ -91,8 +107,8 @@ const Display = (props) => {
     // }
 
     const animate = () => {
-
-      // console.log(props.file);
+      HouseSpawn(scene, sceneOjects, jsonObj.Game.Board);
+      UpdateStickMovement(stickObjects, height, -width, width * screenDivider, jsonObj.Game.Sticks);
       renderScene();
       frameId = window.requestAnimationFrame(animate);
     }

@@ -1,0 +1,34 @@
+{
+  "Game": {
+
+    "Sticks": [
+      {
+        "height": 100,
+        "width": 30,
+        "grounded": true,
+        "direction": "right"
+      }
+    ],
+
+    "SelectionMenu": {
+      "Square": {
+        "X": "838",
+        "Y": "264"
+      },
+
+      "Circle": {
+        "X": "1000",
+        "Y": "264"
+      },
+
+      "House": {
+        "X": "950",
+        "Y": "0"
+      }
+    },
+
+    "Board": [
+      
+    ]
+  }
+}
