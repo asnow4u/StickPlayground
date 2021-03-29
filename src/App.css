@@ -1,0 +1,42 @@
+.PageTitle {
+  text-align: center;
+  color: white;
+  font-size: 130px;
+  font-family: "Verdana";
+  word-spacing: 15px;
+  letter-spacing: 2px;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 10px;
+  margin-bottom: 70px;
+}
+
+.DisplayContainer {
+  width: 90%;
+  height: 400px;
+  margin-left: auto;
+  margin-right: auto;
+
+  border-top: 8px ridge #262626;
+  border-left: 8px ridge #262626;
+  border-right: 8px groove #262626;
+  border-bottom: 8px groove #262626;
+}
+
+.ButtonContainer {
+  width: 20%;
+  height: 80px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 5px;
+  margin-bottom: 50px;
+}
+
+button {
+  width: 33.33%;
+  height: 100%;
+  background-color: #808080;
+  border: 2px solid #262626;
+  outline: none;
+}
