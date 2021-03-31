@@ -1,15 +1,6 @@
 {
   "Game": {
 
-    "Sticks": [
-      {
-        "height": 100,
-        "width": 30,
-        "grounded": true,
-        "direction": "right"
-      }
-    ],
-
     "SelectionMenu": {
       "Square": {
         "X": "838",
@@ -28,7 +19,7 @@
     },
 
     "Board": [
-      
+
     ]
   }
 }

@@ -1,63 +1,71 @@
 import * as THREE from "three";
 
-export const SpawnStick = (scene, pos) => {
-  let geometry = new THREE.BoxGeometry(30, 100, 0);
-  let material = new THREE.MeshBasicMaterial({ color: 0x000000 });
-  let mesh = new THREE.Mesh(geometry, material);
-  mesh.position.set(pos.x, pos.y, 0);
-  mesh.name = "Stick";
-  scene.add(mesh);
+export default class Stick {
 
-  return mesh;
-}
+  constructor(direction) {
+    this.height = 100;
+    this.width = 30;
+    this.grounded = false;
+    this.direction = direction;
 
+    let geometry = new THREE.BoxGeometry(30, 100, 0);
+    let material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    let mesh = new THREE.Mesh(geometry, material);
+    mesh.name = "Stick";
 
-export const HouseSpawn = (scene, sceneObjs, boardObjs) => {
-  let houses = boardObjs.filter( obj => obj.Name === "House" && !obj.StickSpawn);
-
-  if (houses.length > 0) {
-    for (let i=0; i<houses.length; i++) {
-      //randomize
-
-      SpawnStick(scene, {x: houses[i].X, y: houses[i].Y});
-      houses[i].StickSpawn = true;
-    }
+    this.mesh = mesh;
   }
-}
 
-
-export const UpdateStickMovement = (stickObjects, sceneHeight, leftSideWall, rightSideWall, stickData) => {
-
-  stickObjects.forEach((stick, index) => {
+  updateMovement(sceneHeight, leftWidth, rightWidth) {
 
     //Check to see if the bottom part of the stick is grounded otherwise provide gravity
-    if (stick.position.y - stickData[index].height / 2 > -sceneHeight){
-      stickData[index].grounded = false;
+    if (this.mesh.position.y - this.height / 2 > -sceneHeight){
+      this.grounded = false;
     } else {
-      stickData[index].grounded = true;
+      this.grounded = true;
     }
 
     //Apply Gravity
-    if (!stickData[index].grounded){
-      stick.position.y -= 9.8;
+    if (!this.grounded){
+      this.mesh.position.y -= 9.8;
+    }
 
     //Movement
-    } else {
-
-      if (stickData[index].direction === "right"){
-        if (stick.position.x + stickData[index].width / 2 < rightSideWall) {
-          stick.position.x += 5;
+    else {
+      if (this.direction === "right"){
+        if (this.mesh.position.x + this.width / 2 < rightWidth) {
+          this.mesh.position.x += 5;
         } else {
-          stickData[index].direction = "left";
+          this.direction = "left";
         }
 
       } else {
-        if (stick.position.x - stickData[index].width / 2 > leftSideWall){
-          stick.position.x -= 5;
+        if (this.mesh.position.x - this.width / 2 > leftWidth){
+          this.mesh.position.x -= 5;
         } else {
-          stickData[index].direction = "right";
+          this.direction = "right";
         }
       }
     }
-  });
+  }
+
 }
+
+
+
+// export const HouseSpawn = (scene, sceneObjs, boardObjs, stickObjects) => {
+//   let houses = boardObjs.filter( obj => obj.Name === "House" && !obj.StickSpawn);
+//
+//   if (houses.length > 0) {
+//     for (let i=0; i<houses.length; i++) {
+//       //randomize
+//
+//       // SpawnStick(scene, {x: houses[i].X, y: houses[i].Y});
+//       let test = new Stick();
+//       let spawnedStick = new Stick(false, "right", scene, {x: houses[i].X, y: houses[i].Y});
+//       console.log(spawnedStick);
+//
+//       houses[i].StickSpawn = true;
+//     }
+//   }
+// }

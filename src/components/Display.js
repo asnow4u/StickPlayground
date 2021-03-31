@@ -4,10 +4,12 @@ import * as THREE from "three";
 import DragControls from "three-dragcontrols";
 import {SpawnObj, UnSpawnObj} from './Function';
 import {SpawnStick, HouseSpawn, UpdateStickMovement} from './StickController';
+import Stick from './StickController';
 
 const Display = (props) => {
 
   const mount = React.useRef(null);
+  const controls = React.useRef(null);
   let screenDivider = 0.5;
 
   React.useEffect(() => {
@@ -20,6 +22,8 @@ const Display = (props) => {
     camera.position.z = 5;
     scene.add(camera);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+    let pauseState = false;
 
     const stickObjects = [];
     const sceneOjects = [];
@@ -63,8 +67,8 @@ const Display = (props) => {
             });
           }
 
-          console.log(jsonObj.Game.Board);
-          console.log(sceneOjects);
+          // console.log(jsonObj.Game.Board);
+          // console.log(sceneOjects);
         }
       }
     });
@@ -79,16 +83,14 @@ const Display = (props) => {
     const line = new THREE.Line(dividingLineGeometry, dividingLineMaterial);
     scene.add(line);
 
-    //TEMP
-    let helperLineMaterial = new THREE.LineBasicMaterial({color: 0x000000, linewidth: 100}); //TODO get linewidth to work
-    let helperLineGeometry = new THREE.Geometry();
-    helperLineGeometry.vertices.push(new THREE.Vector3(-width, 0, 0));
-    helperLineGeometry.vertices.push(new THREE.Vector3(width * screenDivider, 0, 0));
-    let helperLine = new THREE.Line(helperLineGeometry, helperLineMaterial);
-    scene.add(helperLine);
+    // //TEMP
+    // let helperLineMaterial = new THREE.LineBasicMaterial({color: 0x000000, linewidth: 100}); //TODO get linewidth to work
+    // let helperLineGeometry = new THREE.Geometry();
+    // helperLineGeometry.vertices.push(new THREE.Vector3(-width, 0, 0));
+    // helperLineGeometry.vertices.push(new THREE.Vector3(width * screenDivider, 0, 0));
+    // let helperLine = new THREE.Line(helperLineGeometry, helperLineMaterial);
+    // scene.add(helperLine);
 
-    let pos = {x: -1000, y: 0};
-    stickObjects.push(SpawnStick(scene, pos));
 
     renderer.setClearColor('#808080');
     renderer.setSize(width, height);
@@ -107,41 +109,94 @@ const Display = (props) => {
     // }
 
     const animate = () => {
-      HouseSpawn(scene, sceneOjects, jsonObj.Game.Board);
-      UpdateStickMovement(stickObjects, height, -width, width * screenDivider, jsonObj.Game.Sticks);
+
+      if (!pauseState) {
+        let houses = jsonObj.Game.Board.filter( obj => obj.Name === "House" && !obj.StickSpawn);
+
+        if (houses.length > 0) {
+          for (let i=0; i<houses.length; i++) {
+            //randomize
+
+            let stick = new Stick("right"); //TODO: randomize direction
+            stick.mesh.position.set(houses[i].X, houses[i].Y, 0);
+            scene.add(stick.mesh);
+            stickObjects.push(stick);
+            houses[i].StickSpawn = true;
+          }
+        }
+
+        stickObjects.forEach((stick, index) => {
+          stick.updateMovement(height, -width, width * screenDivider);
+        });
+      }
+
       renderScene();
       frameId = window.requestAnimationFrame(animate);
     }
 
+    //Resume animations
     const start = () => {
       if (!frameId) {
         frameId = requestAnimationFrame(animate);
       }
+
+      pauseState = false;
+
     }
 
-    const stop = () => {
+    const pause = () => {
+      pauseState = true;
+      // cancelAnimationFrame(frameId);
+      // frameId = null;
+    }
+
+    const reset = () => {
+      //TODO: clear the screen
       cancelAnimationFrame(frameId);
       frameId = null;
+      console.log("reset")
     }
 
     mount.current.appendChild(renderer.domElement)
     // window.addEventListener('resize', handleResize)
     start()
 
-    return () => {
-      stop();
-      {
-        // window.removeEventListener('resize', handleResize)
-      }
-      mount.current.removeChild(renderer.domElement);
+    controls.current = {start, pause, reset};
 
-      //TODO: will need to clean all the matterials and geometrys with dispose()
-      while(scene.children.length > 0){
-        scene.remove(scene.children[0]);
-      }
+    //Clean Up
+    // return () => {
+    //   stop();
+    //   {
+    //     // window.removeEventListener('resize', handleResize)
+    //   }
+    //   mount.current.removeChild(renderer.domElement);
+    //
+    //   //TODO: will need to clean all the matterials and geometrys with dispose()
+    //   while(scene.children.length > 0){
+    //     scene.remove(scene.children[0]);
+    //   }
+    // }
+
+  }, [])
+
+  React.useEffect(() => {
+
+    //Resume all animations
+    if (props.state === "Play"){
+      controls.current.start();
     }
 
-  }, [props.file])
+    //Pause all animations (but allow drag and drop from selection menu?)
+    else if (props.state === "Pause"){
+      controls.current.pause();
+    }
+
+    //TODO: Reset everything to its original form
+    else if (props.state === "Stop"){
+      controls.current.reset();
+    }
+    
+  }, [props.state])
 
   return (
     <div className="Display" ref={mount} />

@@ -5,25 +5,19 @@ import Display from './components/Display';
 
 function App() {
 
-  const [displayState, setDisplayState] = React.useState("Off");
+  const [playState, setPlayState] = React.useState("Play");
   const [fileLoad, setFileLoad] = React.useState(false);
 
   return (
     <div>
       <h1 className="PageTitle">Stick Playground</h1>
       <div className="DisplayContainer">
-        <Display file={fileLoad} />
+        <Display state={playState} />
       </div>
       <div className="ButtonContainer">
-        <button onClick={() => setDisplayState("Play")}>Play</button>
-        <button onClick={() => setDisplayState("Pause")}>Pause</button>
-        {
-        //<button onClick={() => setDisplayState("Off")}>Cancel</button>
-        }
-        <button onClick={() => {
-          console.log("click");
-          setFileLoad(!fileLoad)}
-        }>Cancel</button>
+        <button onClick={() => setPlayState("Play")}>Play</button>
+        <button onClick={() => setPlayState("Pause")}>Pause</button>
+        <button onClick={() => setPlayState("Stop")}>Cancel</button>
       </div>
 
     </div>
